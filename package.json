@@ -1,0 +1,86 @@
+{
+  "name": "todo-list",
+  "version": "0.1.0",
+  "description": "A simple todo list app made with reactjs and bootstrap for the css, and electron",
+  "author": {
+    "name": "zaimo",
+    "email": "reycezartigley@gmail.com"
+  },
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "bootstrap": "^5.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.11.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "main": "public/electron.js",
+  "homepage": "./",
+
+  
+  "build": {
+    "appId": "com.todolist",
+    "productName": "To-do List",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "path/to/your/icon.icns"
+    },
+    
+  "nsis": {
+    "allowToChangeInstallationDirectory": true,
+    "oneClick": false
+  },
+  
+    "win": {
+      "target": "nsis",
+      "icon": "./public/icon.ico"
+    }
+
+
+  },
+  "scripts": {
+    "start": "concurrently \"SET BROWSER=none&&npm run react-start\" \"wait-on tcp:127.0.0.1:3000 && electron .\"",
+    "react-start": "react-scripts start",
+    "react-test": "react-scripts test",
+    "react-build": "react-scripts build",
+    "react-eject": "react-scripts eject",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.4.1",
+    "concurrently": "^8.2.1",
+    "electron": "^26.2.0",
+    "electron-builder": "^24.6.4",
+    "wait-on": "^7.0.1"
+  }
+}
