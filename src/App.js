@@ -10,6 +10,7 @@ function App() {
   const [deadline, setDeadline] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [filter, setFilter] = useState("all"); // Default filter is "All"
+  const oten = 0;
 
   // Load tasks from local storage when the component mounts
   useEffect(() => {
