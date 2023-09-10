@@ -63,9 +63,21 @@ function App() {
       return; // Don't add empty tasks
     }
 
+    // Format the deadline in "mm/dd/yyyy - hh:mm am/pm" format
+    const formattedDeadline = deadline
+      ? new Date(deadline).toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : "";
+
     const newTask = {
       taskText: taskText,
-      deadline: deadline,
+      deadline: formattedDeadline,
       completed: false,
     };
 
@@ -73,7 +85,7 @@ function App() {
     setTaskText("");
     setDeadline("");
   };
-
+  
   const deleteTask = (index) => {
     const updatedTasks = [...tasks];
     updatedTasks.splice(index, 1);
@@ -120,9 +132,8 @@ function App() {
           onChange={handleTaskTextChange}
         />
         <input
-          type="date"
+          type="datetime-local" // Use datetime-local input for date and time
           className="form-control"
-          placeholder="Deadline"
           value={deadline}
           onChange={handleDeadlineChange}
         />
