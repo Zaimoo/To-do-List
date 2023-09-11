@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, remote } from "react";
 import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
 import "./App.css"
 import { BsTrash, BsCheckCircle, BsCircle, BsX, BsPencilFill, BsCheck, BsGearFill } from "react-icons/bs"; // Import icons
 import Options from "./components/Options";
-const { ipcRenderer } = window.require('electron');
+const { ipcRenderer, app } = window.require('electron');
 
 
 function App() {
@@ -12,12 +12,13 @@ function App() {
   const [taskText, setTaskText] = useState("");
   const [deadline, setDeadline] = useState("");
   const [darkMode, setDarkMode] = useState(false);
-  const [notificationEnabled, setNotificationEnabled] = useState(localStorage.getItem("notificationEnabled") === "false" ? false : true); // Initialize as enabled
+  const [notificationEnabled, setNotificationEnabled] = useState(localStorage.getItem("notificationEnabled") === "false" ? false : true); 
   const [filter, setFilter] = useState("all"); // Default filter is "All"
   const [editedTaskText, setEditedTaskText] = useState("");
   const [editedDeadline, setEditedDeadline] = useState("");
   const [editMode, setEditMode] = useState(null);
-   const [showOptions, setShowOptions] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [autoStart, setAutoStart] = useState(JSON.parse(localStorage.getItem('autoStart')) ? JSON.parse(localStorage.getItem('autoStart')) : false);
   
 
   // Load tasks from local storage when the component mounts
@@ -35,14 +36,11 @@ function App() {
       setDarkMode(false);
       
     }
-
     const storedNotificationEnabled = localStorage.getItem("notificationEnabled") === "false" ? false : true;
     setNotificationEnabled(storedNotificationEnabled);
 
     resetIsNotified();
     
-
-
   }, []);
 
   // Save tasks to local storage whenever tasks change
@@ -68,15 +66,15 @@ function App() {
     setDarkMode(!darkMode);
   };
 
-  
 
-  const toggleNotification = () => {
-    const newNotificationEnabled = !notificationEnabled;
-    setNotificationEnabled(newNotificationEnabled);
-  
-    // Save the preference to local storage
-    localStorage.setItem("notificationEnabled", newNotificationEnabled);
-  };
+
+    const toggleNotification = () => {
+      const newNotificationEnabled = !notificationEnabled;
+      setNotificationEnabled(newNotificationEnabled);
+    
+      // Save the preference to local storage
+      localStorage.setItem("notificationEnabled", newNotificationEnabled);
+    };
 
   const handleTaskTextChange = (e) => {
     setTaskText(e.target.value);
@@ -176,6 +174,18 @@ function App() {
 
   };
 
+    // Function to handle the "Enable Start on Launch" switch
+    const toggleAutoStart = () => {
+      const newAutoStart = !autoStart;
+      setAutoStart(newAutoStart);
+  
+      // Save the preference to local storage
+      localStorage.setItem("autoStart", newAutoStart);
+  
+      // Send the preference to the main process
+      ipcRenderer.send('toggle-auto-start', newAutoStart);
+    };
+
 
   // Filter the tasks based on the selected filter
   const filteredTasks = tasks.filter((task) => {
@@ -226,8 +236,10 @@ function App() {
     setEditedDeadline("");
     setEditMode(null);
   };
-  
 
+  const runAbout = () => {
+    ipcRenderer.send('run-about', 'https://github.com/Zaimoo/to-do-list')
+  };
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -244,6 +256,9 @@ function App() {
         toggleDarkMode={toggleDarkMode}
         notificationEnabled={notificationEnabled}
         toggleNotification={toggleNotification}
+        autoStart={autoStart}
+        toggleAutoStart={toggleAutoStart}
+        about= {runAbout}
       />
 
       <div className="input-group mb-3">
