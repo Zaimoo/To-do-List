@@ -1,6 +1,8 @@
-const { app, BrowserWindow, Menu, shell} = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, Notification} = require('electron');
 const path = require("path");
 const url = require("url");
+
+require('@electron/remote/main').initialize();
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -8,6 +10,8 @@ function createWindow() {
     height: 600,
     webPreferences: {
       nodeIntegration: true, // Enable Node.js integration
+      eanbleRemoteModule: true,
+      contextIsolation: false,
     },
     icon: path.join(__dirname, "icon.ico")
   });
@@ -68,6 +72,20 @@ function createWindow() {
       Menu.setApplicationMenu(menu);
 
 }
+
+const sendNotification = (title, message) => {
+  const notification = new Notification({
+    title: title,
+    body: message,
+    icon: path.join(__dirname, "icon.ico")
+  });
+
+  notification.show();
+};
+
+ipcMain.on('trigger-notification', (event, title, message) => {
+  sendNotification(title, message);
+});
 
 app.whenReady().then(createWindow);
 
