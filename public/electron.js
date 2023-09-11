@@ -30,46 +30,7 @@ function createWindow() {
     win.webContents.openDevTools();
   }
     
-      let autoRunOnStart = false; // Initialize autoRunOnStart as false
-      const loginItemSettings = app.getLoginItemSettings();
-      autoRunOnStart = loginItemSettings.openAtLogin;
-    
-      // Create a custom menu
-      const menuTemplate = [
-        {
-          label: 'Settings',
-          submenu: [
-            {
-              label: 'Auto Run on Start',
-              type: 'checkbox',
-              checked: autoRunOnStart,
-              click: async (menuItem) => {
-                // Toggle the "Auto Run on Start" setting
-                autoRunOnStart = !autoRunOnStart;
-    
-                // Update the app's login settings
-                app.setLoginItemSettings({
-                  openAtLogin: autoRunOnStart,
-                });
-    
-                // Update the checkbox state
-                menuItem.checked = autoRunOnStart;
-              },
-            },
-          ],
-        },
-        {
-          label: 'About',
-          click: () => {
-            // Handle the "About" menu item here (open a dialog or show information)
-            // For example, you can use the shell module to open an external URL or show a dialog
-            shell.openExternal('https://github.com/Zaimoo/to-do-list');
-          },
-        },
-      ];
-    
-      const menu = Menu.buildFromTemplate(menuTemplate);
-      Menu.setApplicationMenu(menu);
+      Menu.setApplicationMenu(null);
 
 }
 
@@ -85,6 +46,16 @@ const sendNotification = (title, message) => {
 
 ipcMain.on('trigger-notification', (event, title, message) => {
   sendNotification(title, message);
+});
+
+ipcMain.on('toggle-auto-start', (event, bool) => {
+  app.setLoginItemSettings({
+    openAtLogin: bool,
+  });
+});
+
+ipcMain.on('run-about', (event, link) => {
+  shell.openExternal(link);
 });
 
 app.whenReady().then(createWindow);
