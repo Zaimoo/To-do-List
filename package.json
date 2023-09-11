@@ -8,11 +8,13 @@
   },
   "private": true,
   "dependencies": {
+    "@electron/remote": "^2.0.11",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.3.1",
     "react": "^18.2.0",
+    "react-bootstrap": "^2.8.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.11.0",
     "react-scripts": "5.0.1",
@@ -20,8 +22,6 @@
   },
   "main": "public/electron.js",
   "homepage": "./",
-
-  
   "build": {
     "appId": "com.todolist",
     "productName": "To-do List",
@@ -36,18 +36,14 @@
       "target": "dmg",
       "icon": "path/to/your/icon.icns"
     },
-    
-  "nsis": {
-    "allowToChangeInstallationDirectory": true,
-    "oneClick": false
-  },
-  
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false
+    },
     "win": {
       "target": "nsis",
       "icon": "./public/icon.ico"
     }
-
-
   },
   "scripts": {
     "start": "concurrently \"SET BROWSER=none&&npm run react-start\" \"wait-on tcp:127.0.0.1:3000 && electron .\"",
