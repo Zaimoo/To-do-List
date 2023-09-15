@@ -1,10 +1,10 @@
-import { useEffect, useState, remote } from "react";
+import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
-import "./App.css"
+import "./App.css";
 import { BsTrash, BsCheckCircle, BsCircle, BsX, BsPencilFill, BsCheck, BsGearFill } from "react-icons/bs"; // Import icons
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'; // Import react-beautiful-dnd
 import Options from "./components/Options";
-const { ipcRenderer, app } = window.require('electron');
-
+const { ipcRenderer } = window.require('electron');
 
 function App() {
   const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -12,14 +12,13 @@ function App() {
   const [taskText, setTaskText] = useState("");
   const [deadline, setDeadline] = useState("");
   const [darkMode, setDarkMode] = useState(false);
-  const [notificationEnabled, setNotificationEnabled] = useState(localStorage.getItem("notificationEnabled") === "false" ? false : true); 
+  const [notificationEnabled, setNotificationEnabled] = useState(localStorage.getItem("notificationEnabled") === "false" ? false : true);
   const [filter, setFilter] = useState("all"); // Default filter is "All"
   const [editedTaskText, setEditedTaskText] = useState("");
   const [editedDeadline, setEditedDeadline] = useState("");
   const [editMode, setEditMode] = useState(null);
   const [showOptions, setShowOptions] = useState(false);
   const [autoStart, setAutoStart] = useState(JSON.parse(localStorage.getItem('autoStart')) ? JSON.parse(localStorage.getItem('autoStart')) : false);
-  
 
   // Load tasks from local storage when the component mounts
   useEffect(() => {
@@ -34,13 +33,12 @@ function App() {
     } else {
       document.documentElement.setAttribute("data-bs-theme", "light");
       setDarkMode(false);
-      
     }
     const storedNotificationEnabled = localStorage.getItem("notificationEnabled") === "false" ? false : true;
     setNotificationEnabled(storedNotificationEnabled);
 
     resetIsNotified();
-    
+
   }, []);
 
   // Save tasks to local storage whenever tasks change
@@ -66,15 +64,13 @@ function App() {
     setDarkMode(!darkMode);
   };
 
+  const toggleNotification = () => {
+    const newNotificationEnabled = !notificationEnabled;
+    setNotificationEnabled(newNotificationEnabled);
 
-
-    const toggleNotification = () => {
-      const newNotificationEnabled = !notificationEnabled;
-      setNotificationEnabled(newNotificationEnabled);
-    
-      // Save the preference to local storage
-      localStorage.setItem("notificationEnabled", newNotificationEnabled);
-    };
+    // Save the preference to local storage
+    localStorage.setItem("notificationEnabled", newNotificationEnabled);
+  };
 
   const handleTaskTextChange = (e) => {
     setTaskText(e.target.value);
@@ -103,13 +99,13 @@ function App() {
     // Format the deadline in "mm/dd/yyyy - hh:mm am/pm" format
     const formattedDeadline = deadline
       ? new Date(deadline).toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        })
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
       : "";
 
     const newTask = {
@@ -137,7 +133,7 @@ function App() {
         const deadlineTime = new Date(task.nonFormattedDeadline);
         const timeDifference = deadlineTime.getTime() - currentTime.getTime();
 
-  
+
         if (timeDifference > 0 && timeDifference <= notificationThreshold && !task.isNotified) {
           sendTaskForNotification(task)
 
@@ -160,7 +156,7 @@ function App() {
     }));
     setTasks(updatedTasks);
   };
-  
+
   const deleteTask = (index) => {
     const updatedTasks = [...tasks];
     updatedTasks.splice(index, 1);
@@ -174,18 +170,29 @@ function App() {
 
   };
 
-    // Function to handle the "Enable Start on Launch" switch
-    const toggleAutoStart = () => {
-      const newAutoStart = !autoStart;
-      setAutoStart(newAutoStart);
-  
-      // Save the preference to local storage
-      localStorage.setItem("autoStart", newAutoStart);
-  
-      // Send the preference to the main process
-      ipcRenderer.send('toggle-auto-start', newAutoStart);
-    };
+  // Function to handle the "Enable Start on Launch" switch
+  const toggleAutoStart = () => {
+    const newAutoStart = !autoStart;
+    setAutoStart(newAutoStart);
 
+    // Save the preference to local storage
+    localStorage.setItem("autoStart", newAutoStart);
+
+    // Send the preference to the main process
+    ipcRenderer.send('toggle-auto-start', newAutoStart);
+  };
+
+  // Function to handle drag-and-drop reordering of tasks
+  const onDragEnd = (result) => {
+    if (!result.destination) {
+      return; // Item was dropped outside the list
+    }
+
+    const updatedTasks = [...tasks];
+    const [movedTask] = updatedTasks.splice(result.source.index, 1); // Remove the dragged task
+    updatedTasks.splice(result.destination.index, 0, movedTask); // Insert the task at the destination index
+    setTasks(updatedTasks);
+  };
 
   // Filter the tasks based on the selected filter
   const filteredTasks = tasks.filter((task) => {
@@ -203,20 +210,20 @@ function App() {
     setEditedDeadline(taskToEdit.deadline);
     setEditMode(index);
   };
-  
+
   const cancelEdit = () => {
     setEditedTaskText("");
     setEditedDeadline("");
     setEditMode(null);
   };
-  
+
   const updateTask = (index) => {
     if (editedTaskText.trim() === "") {
       return; // Don't update with empty task text
     }
-  
+
     const formattedDeadline = editedDeadline
-    ? new Date(editedDeadline).toLocaleString("en-US", {
+      ? new Date(editedDeadline).toLocaleString("en-US", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -224,7 +231,7 @@ function App() {
         minute: "2-digit",
         hour12: true,
       })
-    : "";
+      : "";
     const updatedTasks = [...tasks];
     updatedTasks[index] = {
       ...updatedTasks[index],
@@ -240,6 +247,7 @@ function App() {
   const runAbout = () => {
     ipcRenderer.send('run-about', 'https://github.com/Zaimoo/to-do-list')
   };
+
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -258,7 +266,7 @@ function App() {
         toggleNotification={toggleNotification}
         autoStart={autoStart}
         toggleAutoStart={toggleAutoStart}
-        about= {runAbout}
+        about={runAbout}
       />
 
       <div className="input-group mb-3">
@@ -285,7 +293,7 @@ function App() {
         <button
           className={`btn btn-outline-primary ${
             filter === "all" ? "active" : ""
-          }`}
+            }`}
           onClick={() => handleFilterChange("all")}
         >
           All
@@ -293,7 +301,7 @@ function App() {
         <button
           className={`btn btn-outline-primary ${
             filter === "active" ? "active" : ""
-          }`}
+            }`}
           onClick={() => handleFilterChange("active")}
         >
           Active
@@ -301,92 +309,109 @@ function App() {
         <button
           className={`btn btn-outline-primary ${
             filter === "completed" ? "active" : ""
-          }`}
+            }`}
           onClick={() => handleFilterChange("completed")}
         >
           Completed
         </button>
       </div>
-      <ul className="list-group">
-        {filteredTasks.map((task, index) => (
-          <li
-            key={index}
-            className={`list-group-item d-flex flex-column ${
-              task.completed ? "list-group-item-success" : ""
-            }`}
-          >
-              {editMode === index ? (
-              <div className="d-flex justify-content-between align-items-center">
-                <input
-                  type="text"
-                  className="form-control"
-                  value={editedTaskText}
-                  onChange={(e) => setEditedTaskText(e.target.value)}
-                />
-                <input
-                  type="datetime-local"
-                  className="form-control"
-                  value={editedDeadline}
-                  onChange={(e) => setEditedDeadline(e.target.value)}
-                />
-                <div>
-                  <button
-                    className="btn btn-success btn-sm ml-1"
-                    onClick={() => {
-                      updateTask(index);
-                    }}
-                  >
-                    <BsCheck />
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm ml-1"
-                    onClick={() => {
-                      cancelEdit();
-                    }}
-                  >
-                    <BsX />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="d-flex justify-content-between align-items-center">
-                <span>{task.taskText}</span>
-                <div>
-                  <button
-                    className="btn btn-success btn-sm "
-                    onClick={() => {
-                      toggleCompletion(index);
-                    }}
-                  >
-                    {task.completed ? <BsCheckCircle /> : <BsCircle />}
-                  </button>
-                  <button
-                    className="btn btn-warning btn-sm mx-1"
-                    onClick={() => {
-                      startEdit(index);
-                    }}
-                  >
-                    <BsPencilFill />
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => {
-                      deleteTask(index);
-                    }}
-                  >
-                    <BsTrash />
-                  </button>
-                </div>
-              </div>
-            )}
-            {task.deadline && (
-              <small className="text-muted mt-2">
-                Deadline: {task.deadline}
-              </small>
-            )}
-          </li>
-        ))}
-      </ul>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="task-list">
+          {(provided) => (
+            <ul
+              className="list-group"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {filteredTasks.map((task, index) => (
+                <Draggable key={index} draggableId={index.toString()} index={index}>
+                  {(provided) => (
+                    <li
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`list-group-item d-flex flex-column ${
+                        task.completed ? "list-group-item-success" : ""
+                        }`}
+                    >
+                      {editMode === index ? (
+                        <div className="d-flex justify-content-between align-items-center">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editedTaskText}
+                            onChange={(e) => setEditedTaskText(e.target.value)}
+                          />
+                          <input
+                            type="datetime-local"
+                            className="form-control"
+                            value={editedDeadline}
+                            onChange={(e) => setEditedDeadline(e.target.value)}
+                          />
+                          <div>
+                            <button
+                              className="btn btn-success btn-sm ml-1"
+                              onClick={() => {
+                                updateTask(index);
+                              }}
+                            >
+                              <BsCheck />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm ml-1"
+                              onClick={() => {
+                                cancelEdit();
+                              }}
+                            >
+                              <BsX />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span>{task.taskText}</span>
+                          <div>
+                            <button
+                              className="btn btn-success btn-sm "
+                              onClick={() => {
+                                toggleCompletion(index);
+                              }}
+                            >
+                              {task.completed ? <BsCheckCircle /> : <BsCircle />}
+                            </button>
+                            <button
+                              className="btn btn-warning btn-sm mx-1"
+                              onClick={() => {
+                                startEdit(index);
+                              }}
+                            >
+                              <BsPencilFill />
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => {
+                                deleteTask(index);
+                              }}
+                            >
+                              <BsTrash />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {task.deadline && (
+                        <small className="text-muted mt-2">
+                          Deadline: {task.deadline}
+                        </small>
+                      )}
+                    </li>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 }
